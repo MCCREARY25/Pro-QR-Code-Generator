@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro QR Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Card Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        /* Animation for the QR Code appearance */
+        .qr-appear {
+            animation: fadeInScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes fadeInScale {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Styling */
+        .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="w-full max-w-lg">
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+                Pro <span class="text-indigo-400">QR</span> Generator
+            </h1>
+            <p class="text-gray-400 text-sm">Fast, modern, and customizable QR codes.</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 space-y-6">
+            
+            <!-- URL Input Group -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Enter URL</label>
+                <div class="flex relative">
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        class="input-field w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 pl-4 pr-24 text-white placeholder-gray-500 focus:outline-none transition-all"
+                        placeholder="https://example.com"
+                    >
+                    <!-- Paste Button inside Input -->
+                    <button 
+                        onclick="pasteFromClipboard()" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-slate-700 hover:bg-indigo-600 text-gray-300 hover:text-white text-xs font-semibold py-1.5 px-3 rounded-md transition-all duration-300"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Paste
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Settings Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Foreground Color -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Foreground</label>
+                    <div class="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-lg p-2">
+                        <input type="color" id="fgColor" value="#ffffff" class="h-8 w-8 rounded cursor-pointer border-0 bg-transparent">
+                        <span id="fgHex" class="text-xs text-gray-300 font-mono">#ffffff</span>
+                    </div>
+                </div>
+                <!-- Background Color -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Background</label>
+                    <div class="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-lg p-2">
+                        <input type="color" id="bgColor" value="#000000" class="h-8 w-8 rounded cursor-pointer border-0 bg-transparent">
+                        <span id="bgHex" class="text-xs text-gray-300 font-mono">#000000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Size Slider -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-1">Size: <span id="sizeLabel" class="text-indigo-400">250px</span></label>
+                <input type="range" id="sizeSlider" min="150" max="500" value="250" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3 pt-2">
+                <button 
+                    onclick="generateQR()" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" />
+                    </svg>
+                    Generate QR Code
+                </button>
+            </div>
+
+            <!-- Output Area -->
+            <div id="outputArea" class="hidden">
+                <div class="border-t border-slate-700 pt-6 mt-6">
+                    <div class="bg-white rounded-xl p-4 flex items-center justify-center mx-auto qr-appear" id="qrCanvasWrapper">
+                        <!-- QR Image Injected Here -->
+                        <img id="qrImage" src="" alt="QR Code">
+                    </div>
+                    
+                    <button 
+                        onclick="downloadQR()" 
+                        class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download PNG
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-xs mt-6">
+            Drag & Drop or Paste URL. Works Offline.
+        </p>
+    </div>
+
+    <script>
+        // Elements
+        const urlInput = document.getElementById('urlInput');
+        const fgColor = document.getElementById('fgColor');
+        const bgColor = document.getElementById('bgColor');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const sizeLabel = document.getElementById('sizeLabel');
+        const fgHex = document.getElementById('fgHex');
+        const bgHex = document.getElementById('bgHex');
+        const outputArea = document.getElementById('outputArea');
+        const qrImage = document.getElementById('qrImage');
+
+        // Update UI labels
+        sizeSlider.oninput = () => sizeLabel.textContent = `${sizeSlider.value}px`;
+        fgColor.oninput = () => fgHex.textContent = fgColor.value;
+        bgColor.oninput = () => bgHex.textContent = bgColor.value;
+
+        // Paste Function using Clipboard API
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                urlInput.value = text;
+                // Auto-trigger generation on paste for better UX
+                generateQR();
+            } catch (err) {
+                // Fallback for browsers that block clipboard access without permission
+                alert('Unable to paste. Please check browser permissions or paste manually (Ctrl+V).');
+            }
+        }
+
+        // Generate QR Code
+        function generateQR() {
+            const text = urlInput.value.trim();
+            if (!text) {
+                // Simple validation shake animation
+                urlInput.classList.add('border-red-500');
+                setTimeout(() => urlInput.classList.remove('border-red-500'), 1000);
+                return;
+            }
+
+            const size = parseInt(sizeSlider.value);
+            
+            // Using QRious library
+            const qr = new QRious({
+                value: text,
+                size: size,
+                foreground: fgColor.value,
+                background: bgColor.value,
+                level: 'H' // High error correction (allows for logos or damage)
+            });
+
+            // Get Data URL
+            const dataUrl = qr.toDataURL();
+            qrImage.src = dataUrl;
+            
+            // Show Output
+            outputArea.classList.remove('hidden');
+            
+            // Reset Animation
+            const wrapper = document.getElementById('qrCanvasWrapper');
+            wrapper.classList.remove('qr-appear');
+            void wrapper.offsetWidth; // trigger reflow
+            wrapper.classList.add('qr-appear');
+        }
+
+        // Download Function
+        function downloadQR() {
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = qrImage.src;
+            link.click();
+        }
+    </script>
+</body>
+</html>
